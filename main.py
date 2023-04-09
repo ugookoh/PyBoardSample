@@ -2,15 +2,14 @@
 import math
 import pyb
 from WriterClass import WriterClass
-from machine import I2C, Pin, SoftI2C
 import time
 
 writer = WriterClass('data.csv')
 
 
 # Initialize I2C interfaces
-i2c_x = pyb.I2C(1, pyb.I2C.MASTER)
-i2c_y = pyb.I2C(2, pyb.I2C.MASTER)
+i2c_x = pyb.I2C('X', pyb.I2C.MASTER)
+i2c_y = pyb.I2C('Y', pyb.I2C.MASTER)
 
 # H3LIS331DL Accelerometer Constants
 ACC_ADDRESS = i2c_x.scan()[0]
@@ -88,9 +87,11 @@ def read_temp():
 recording = False
 sw = pyb.Switch()
 
+
 def f():
     global recording
     recording = not recording
+
 
 sw.callback(f)
 
@@ -98,7 +99,6 @@ while True:
     if(recording):
         pyb.LED(1).off()
         pyb.LED(2).on()
-
         try:
             x_acc, y_acc, z_acc = read_acc()
             x_gyro, y_gyro, z_gyro = read_gyro()
@@ -106,10 +106,8 @@ while True:
             writer.writeData(
                 f'{x_acc}, {y_acc}, {z_acc}, {x_gyro}, {y_gyro}, {z_gyro}, {temp}')
         except:
-            # AN ERROR OCCURRED
             pass
-            # writer.writeData(
-            #     f'"N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A"')
+
         pyb.LED(3).toggle()
     else:
         pyb.LED(1).on()
