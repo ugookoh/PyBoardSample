@@ -37,8 +37,6 @@ i2c_y.mem_write(0b00001111, GYRO_ADDRESS, GYRO_CTRL_REG1)  # Turn on Gyroscope
 i2c_y.mem_write(0b00110000, GYRO_ADDRESS, GYRO_CTRL_REG4)
 
 # Read and Convert Accelerometer Data
-
-
 def read_acc():
     acc_data = i2c_x.mem_read(6, ACC_ADDRESS, ACC_OUT_X_L | 0x80)
     x = acc_data[1] << 8 | acc_data[0]
@@ -78,9 +76,15 @@ def read_gyro():
 
 
 def read_temp():
-    temp_data = i2c_y.mem_read(2, GYRO_ADDRESS, 0x26 | 0x80)
-    temp = temp_data[1] << 8 | temp_data[0]
-    temp = temp / 8 + 25
+    try:
+        temp_data = i2c_y.mem_read(1, GYRO_ADDRESS, 0x26 | 0x80)
+        temp = temp_data[0]  # temperature data is stored in one byte
+        if temp >= 0x80:
+            temp = -((0xFF - temp) + 1)  # 2's complement conversion for negative temperatures
+        temp = temp * 0.0625  # convert to degrees Celsius
+    except Exception as e:
+        print("Error reading temperature:", e)
+        temp = -1.0  # set default value to -1.0 in case of error
     return temp
 
 
@@ -113,4 +117,4 @@ while True:
         pyb.LED(1).on()
         pyb.LED(2).off()
         pyb.LED(3).off()
-    time.sleep(500)
+    time.sleep(0.5)
